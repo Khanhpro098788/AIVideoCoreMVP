@@ -28,9 +28,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+from src.auth.router import router as auth_router
+
 @app.get("/health")
 async def health_check():
     return {"status": "ok", "message": "Hệ thống hoạt động bình thường"}
 
-# TODO: Include routers here (auth, videos, assets, social)
-# app.include_router(auth_router, prefix=settings.API_V1_STR + "/auth", tags=["auth"])
+app.include_router(auth_router, prefix=f"{settings.API_V1_STR}/auth", tags=["auth"])
