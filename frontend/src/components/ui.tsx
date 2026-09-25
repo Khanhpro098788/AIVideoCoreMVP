@@ -1,4 +1,5 @@
-import { type ReactNode } from 'react';
+import { type ReactNode, useState } from 'react';
+import { Eye, EyeOff } from 'lucide-react';
 
 export function GlassCard({ children, className = '', onClick }: { children: ReactNode; className?: string; onClick?: () => void }) {
   return (
@@ -90,6 +91,9 @@ export function Input({
   className?: string;
   required?: boolean;
 }) {
+  const [showPassword, setShowPassword] = useState(false);
+  const inputType = type === 'password' && showPassword ? 'text' : type;
+
   return (
     <div className={className}>
       {label && (
@@ -104,13 +108,22 @@ export function Input({
           </div>
         )}
         <input
-          type={type}
+          type={inputType}
           value={value}
           required={required}
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
-          className={`w-full ${icon ? 'pl-11' : 'pl-4'} pr-4 py-3 bg-ink-800/60 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/25 transition-smooth focus-ring ${className}`}
+          className={`w-full ${icon ? 'pl-11' : 'pl-4'} ${type === 'password' ? 'pr-11' : 'pr-4'} py-3 bg-ink-800/60 border border-white/10 rounded-xl text-sm text-white placeholder:text-white/25 transition-smooth focus-ring`}
         />
+        {type === 'password' && (
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3.5 top-1/2 -translate-y-1/2 text-white/30 hover:text-white transition-smooth"
+          >
+            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+        )}
       </div>
     </div>
   );
