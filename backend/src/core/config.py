@@ -25,6 +25,12 @@ class Settings(BaseSettings):
     CLOUD_STORAGE_API_KEY: Optional[str] = None
     CLOUD_STORAGE_API_SECRET: Optional[str] = None
     CLOUD_STORAGE_BUCKET_NAME: Optional[str] = None
+    
+    # SMTP Email
+    SMTP_SERVER: str = "smtp.gmail.com"
+    SMTP_PORT: int = 587
+    SMTP_USER: str = ""
+    SMTP_PASSWORD: str = ""
 
     class Config:
         env_file = ".env"
