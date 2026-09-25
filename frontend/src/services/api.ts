@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useAuthStore } from '../store/authStore';
 // Create base instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api/v1',
   withCredentials: true, // Required to send and receive HttpOnly cookies
   headers: {
     'Content-Type': 'application/json',
@@ -29,7 +29,7 @@ const processQueue = (error: any, token: string | null = null) => {
 api.interceptors.request.use(
   (config: any) => {
     const token = useAuthStore.getState().accessToken;
-    if (token) {
+    if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
     }
     return config;
@@ -67,7 +67,7 @@ api.interceptors.response.use(
         );
 
         // Update token in store
-        const newToken = data.accessToken;
+        const newToken = data.access_token; // FastAPI trả về access_token thay vì accessToken
         const currentUser = useAuthStore.getState().user;
         if (currentUser) {
           useAuthStore.getState().setAuth(newToken, currentUser);

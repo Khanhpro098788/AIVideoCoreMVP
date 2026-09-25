@@ -9,7 +9,7 @@ import type { PageKey } from '@/components/Sidebar';
 type AuthMode = 'signin' | 'signup' | 'otp' | 'forgot' | 'forgot-otp';
 
 export function AuthPage({ onAuth }: { onAuth: () => void }) {
-  const { t } = useI18n();
+  const { t, lang, toggleLang } = useI18n();
   const [mode, setMode] = useState<AuthMode>('signin');
   
   const [error, setError] = useState('');
@@ -41,21 +41,26 @@ export function AuthPage({ onAuth }: { onAuth: () => void }) {
     }
   }, [mode]);
 
-  const handleOtpChange = (idx: number, val: string, setter: (v: string[]) => void, current: string[]) => {
-    if (!/^\d?$/.test(val)) return;
-    const next = [...current];
-    next[idx] = val;
-    setter(next);
-    if (val && idx < 5) otpRefs.current[idx + 1]?.focus();
+  const handleOtpChange = (idx: number, val: string, setter: any) => {
+    const digit = val.slice(-1);
+    if (val && !/^\d$/.test(digit)) return;
+    setter((prev: string[]) => {
+      const next = [...prev];
+      next[idx] = digit;
+      return next;
+    });
+    if (digit && idx < 5) {
+      setTimeout(() => otpRefs.current[idx + 1]?.focus(), 10);
+    }
   };
 
-  const handleOtpKeyDown = (idx: number, e: React.KeyboardEvent, setter: (v: string[]) => void, current: string[]) => {
-    if (e.key === 'Backspace' && !current[idx] && idx > 0) {
+  const handleOtpKeyDown = (idx: number, e: React.KeyboardEvent, currentDigit: string) => {
+    if (e.key === 'Backspace' && !currentDigit && idx > 0) {
       otpRefs.current[idx - 1]?.focus();
     }
   };
 
-  const handleOtpPaste = (e: React.ClipboardEvent, setter: (v: string[]) => void) => {
+  const handleOtpPaste = (e: React.ClipboardEvent, setter: any) => {
     e.preventDefault();
     const digits = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
     if (digits.length > 0) {
@@ -71,6 +76,9 @@ export function AuthPage({ onAuth }: { onAuth: () => void }) {
     setLoading(true);
     try {
       const data = await authService.signin({ email: signInId, password: signInPass });
+      // Lưu token vào memory trước để axios tự động đính kèm vào request tiếp theo
+      useAuthStore.getState().setToken(data.access_token);
+      
       const user = await authService.getProfile();
       setAuth(data.access_token, user);
       onAuth();
@@ -189,6 +197,16 @@ export function AuthPage({ onAuth }: { onAuth: () => void }) {
 
       {/* Right auth panel */}
       <div className="flex-1 flex items-center justify-center p-6 lg:p-12 relative z-10">
+        {/* Language Toggle */}
+        <div className="absolute top-6 right-6 z-20">
+          <button 
+            onClick={toggleLang}
+            className="px-3 py-1.5 glass rounded-full text-xs font-bold text-white hover:bg-white/10 transition-smooth uppercase tracking-wider"
+          >
+            {lang === 'en' ? 'EN / VI' : 'VI / EN'}
+          </button>
+        </div>
+        
         <div className="w-full max-w-md animate-fade-up">
           {/* Mobile logo */}
           <div className="lg:hidden mb-8 flex justify-center">
@@ -361,10 +379,11 @@ export function AuthPage({ onAuth }: { onAuth: () => void }) {
                     ref={(el) => { otpRefs.current[idx] = el; }}
                     type="text"
                     inputMode="numeric"
-                    maxLength={1}
+                    maxLength={2}
                     value={digit}
-                    onChange={(e) => handleOtpChange(idx, e.target.value, setOtp, otp)}
-                    onKeyDown={(e) => handleOtpKeyDown(idx, e, setOtp, otp)}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => handleOtpChange(idx, e.target.value, setOtp)}
+                    onKeyDown={(e) => handleOtpKeyDown(idx, e, digit)}
                     className="w-12 h-14 text-center text-xl font-bold bg-ink-800/60 border border-white/10 rounded-xl text-white transition-smooth focus-ring"
                   />
                 ))}
@@ -423,10 +442,11 @@ export function AuthPage({ onAuth }: { onAuth: () => void }) {
                     ref={(el) => { otpRefs.current[idx] = el; }}
                     type="text"
                     inputMode="numeric"
-                    maxLength={1}
+                    maxLength={2}
                     value={digit}
-                    onChange={(e) => handleOtpChange(idx, e.target.value, setForgotOtp, forgotOtp)}
-                    onKeyDown={(e) => handleOtpKeyDown(idx, e, setForgotOtp, forgotOtp)}
+                    onFocus={(e) => e.target.select()}
+                    onChange={(e) => handleOtpChange(idx, e.target.value, setForgotOtp)}
+                    onKeyDown={(e) => handleOtpKeyDown(idx, e, digit)}
                     className="w-12 h-14 text-center text-xl font-bold bg-ink-800/60 border border-white/10 rounded-xl text-white transition-smooth focus-ring"
                   />
                 ))}
